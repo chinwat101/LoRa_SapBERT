@@ -1,0 +1,28 @@
+# LoRA Configuration
+lora:
+  r: 32
+  lora_alpha: 64
+  lora_dropout: 0.05
+  bias: "none"
+
+  # Target modules to apply LoRA
+  # Run scripts/inspect_model_modules.py to verify these names
+  target_modules:
+    - "query"
+    - "key"
+    - "value"
+    - "dense"
+
+  # Modules to completely unfreeze (for new vocabulary tokens)
+  modules_to_save:
+    - "word_embeddings"
+    - "cls.predictions"
+
+  # Task type - FEATURE_EXTRACTION for BERT encoder (MLM uses the full BertForMaskedLM)
+  task_type: "FEATURE_EXTRACTION"
+
+  # Inference mode (set false during training)
+  inference_mode: false
+
+  # Whether to save only adapter weights
+  save_only_adapter: true

@@ -1,0 +1,29 @@
+# Core ML
+torch>=2.0.0
+transformers>=4.38.0
+datasets>=2.18.0
+accelerate>=0.27.0
+peft>=0.9.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Config
+pyyaml>=6.0
+
+# Logging & monitoring
+tensorboard>=2.14.0
+tqdm>=4.65.0
+
+# Text utilities
+regex>=2023.8.8
+sentencepiece>=0.1.99   # extend_tokenizer.py: train Thai BPE vocab
+
+# Evaluation
+evaluate>=0.4.0
+seqeval>=1.2.2          # train_wangchan_ner.py: entity-level F1 metric
+
+# Safety / saving
+safetensors>=0.4.0

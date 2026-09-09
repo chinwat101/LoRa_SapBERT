@@ -1,0 +1,38 @@
+# Data Configuration
+data:
+  raw_dir: "data/raw/lexitron"
+  interim_dir: "data/interim"
+  processed_dir: "data/processed"
+
+  # Lexitron CSV files
+  thai_file: "telex.csv"
+  encoding: "utf-8"
+
+  # Thai columns to use (verified from actual CSV)
+  thai_columns:
+    - "t-entry"
+    - "t-def"
+    - "t-syn"
+    - "t-ant"
+    - "t-sample"
+
+  # Column mapping from CSV (BOM-stripped)
+  column_map:
+    entry: "t-entry"
+    definition: "t-def"
+    synonym: "t-syn"
+    antonym: "t-ant"
+    sample: "t-sample"
+    category: "t-cat"
+
+  # Preprocessing
+  min_text_length: 5
+  max_text_length: 512
+  remove_duplicates: true
+  remove_html: true
+
+  # Split ratios
+  train_ratio: 0.90
+  val_ratio: 0.05
+  test_ratio: 0.05
+  seed: 42

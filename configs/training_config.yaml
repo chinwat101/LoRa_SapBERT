@@ -1,0 +1,39 @@
+# Training Configuration
+training:
+  # Paths
+  output_dir: "outputs/checkpoints"
+  logging_dir: "outputs/logs"
+
+  # Masking
+  mlm_probability: 0.15
+
+  # Hyperparameters
+  learning_rate: 2.0e-4
+  num_train_epochs: 1
+  per_device_train_batch_size: 16
+  per_device_eval_batch_size: 16
+  gradient_accumulation_steps: 2
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+
+  # Tokenization
+  max_seq_length: 128
+
+  # Logging & checkpointing
+  logging_steps: 100
+  eval_steps: 1000
+  save_steps: 1000
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+
+  # Precision
+  fp16: true          # will be auto-disabled if CUDA not available
+  bf16: false
+
+  # Reproducibility
+  seed: 42
+
+  # Resume from checkpoint
+  resume_from_checkpoint: null  # set to checkpoint path to resume, e.g. "outputs/checkpoints/checkpoint-400"

@@ -1,0 +1,35 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Datasets & Models (Large Files)
+data/raw/
+data/interim/
+data/processed/
+outputs/adapters/
+outputs/checkpoints/
+outputs/eval_tmp/
+outputs/logs/
+outputs/merged_model*/
+
+# Model weights
+*.safetensors
+*.bin
+*.pth
+*.pt
+*.onnx
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

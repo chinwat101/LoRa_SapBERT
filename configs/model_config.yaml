@@ -1,0 +1,29 @@
+# Model Configuration
+model:
+  # Base model path (read-only, never overwritten)
+  # This points to the EXTENDED model (SapBERT + Thai vocab) used for MLM training
+  base_model_path: "data/interim/extended_base"
+
+  # Original base model path (read-only source for extend_tokenizer.py)
+  # This is the ORIGINAL SapBERT model BEFORE Thai vocab expansion.
+  # extend_tokenizer.py reads from here and writes to base_model_path above.
+  # ⚠️ Set this to the actual path on your machine before running extend_tokenizer.py
+  # e.g. on Linux: /home/aom/NECTEC/NER/outputs/models/SapBERTThaiMLM_CRF
+  # e.g. on Windows: I:/NECTEC/NER/outputs/models/SapBERTThaiMLM_CRF
+  original_base_model_path: "/home/aom/NECTEC/NER/outputs/models/SapBERTThaiMLM_CRF"
+
+  # Architecture info (verified from config.json)
+  model_type: "bert"
+  hidden_size: 768
+  architecture: "BertForMaskedLM"
+
+  # Output paths
+  adapter_output_dir: "outputs/adapters/lexitron_wiki_thai_lora_r32"
+  merged_model_dir: "outputs/merged_model_1"
+
+  # Required files to validate before loading
+  required_files:
+    - "config.json"
+    - "tokenizer_config.json"
+    - "tokenizer.json"
+    - "pytorch_model.bin"
