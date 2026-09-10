@@ -2,6 +2,30 @@
 
 โปรเจกต์ปรับจูนโมเดล **SapBERT** (โมเดลการแพทย์ภาษาอังกฤษ) ให้เข้าใจภาษาไทยผ่านเทคนิค **Vocabulary Expansion (คำไทย 20,000 คำ) + MLM LoRA Pre-training (Task 1)** และนำไป Fine-tune ต่องาน **Clinical Named Entity Recognition (Task 2)** สำหรับฉลากยาและข้อความทางการแพทย์
 
+## 🛠️ การติดตั้งและการเตรียม Environment (.venv)
+
+```bash
+# 1. สร้าง Virtual Environment (.venv)
+python -m venv .venv
+
+# 2. เปิดใช้งาน Virtual Environment
+# บน Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# บน Windows (CMD):
+.\.venv\Scripts\activate.bat
+# บน Linux / macOS:
+source .venv/bin/activate
+
+# 3. อัปเดต pip และติดตั้ง Dependencies ทั้งหมด
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+```bash
+
+#ทุกไฟล์สามารถรันโดยผ่าน
+main.py
+
+```
 ---
 
 ## 🚀 ขั้นตอนการรันทั้งหมด (Step-by-Step Pipeline)
