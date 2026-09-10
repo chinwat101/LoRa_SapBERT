@@ -43,7 +43,7 @@ python scripts/merge_lora.py
 # 3.4 ทดสอบผลลัพธ์การเติมคำภาษาไทยในช่องว่าง [MASK]
 python scripts/test_inference.py
 
-# 3.5 (ออปชันเสริม) ประเมินค่า Perplexity และ MLM Loss
+# 3.5  ประเมินค่า Perplexity และ MLM Loss
 python scripts/evaluate_mlm.py
 ```
 
