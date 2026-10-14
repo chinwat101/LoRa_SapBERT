@@ -91,4 +91,26 @@ python scripts/train_sapbert_ner.py --base-model outputs/merged_model_1
 ```bash
 # ทดสอบโมเดลสกัดชื่อยา (DRUG), โรค (DISEASE), และอาการ (SYMPTOM)
 python scripts/inference_ner.py --model outputs/merged_model_1_ner_base --text "อะบิราเทอโรน ใช้รักษามะเร็งต่อมลูกหมาก โดยมีอาการแพร่กระจาย"
+
+# Inference หลังเทรนเสร็จ
+python scripts/inference_mtl.py \
+    --model outputs/mtl_model \
+    --text "อะบิราเทอโรน ใช้รักษามะเร็งต่อมลูกหมาก โดยมีอาการแพร่กระจาย"
+```
+
+#### Step7: ทดสอบ Evaluation Model
+```bash
+# (Exact / Partial Match Evaluation)
+python scripts/evaluate_extract_match.py --model outputs/fl_multitask_merged_ner_base --data data/raw/text100_answer.json
+#หรือ 
+python scripts/evaluate_extract_match.py `
+  --model outputs/fl_multitask_merged_ner `
+  --data data/raw/text100_answer.json
+
+
+python scripts/evaluate_partial_match.py  --model outputs/fl_multitask_merged_ner   --data data/raw/text100_answer.json
+#หรือ 
+python scripts/evaluate_partial_match.py `
+  --model outputs/fl_multitask_merged_ner `
+  --data data/raw/text100_answer.json
 ```
