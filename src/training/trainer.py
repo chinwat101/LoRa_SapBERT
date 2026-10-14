@@ -69,7 +69,13 @@ def _compute_warmup_steps(cfg: dict) -> int:
     batch_size = cfg.get("per_device_train_batch_size", 16)
     grad_accum = cfg.get("gradient_accumulation_steps", 2)
     # Use train_dataset_size if available, otherwise fall back to a reasonable default
-    train_size = cfg.get("train_dataset_size", 2_200_000)
+    train_size = cfg.get("train_dataset_size", None)
+    if train_size is None:
+        logger.warning(
+            "'train_dataset_size' not set in config — warmup_steps will be estimated "
+            "from default of 2,200,000. Pass actual dataset size for accuracy."
+        )
+        train_size = 2_200_000
     steps_per_epoch = max(1, train_size // (batch_size * grad_accum))
     total_steps = steps_per_epoch * num_epochs
     warmup_steps = int(total_steps * warmup_ratio)
@@ -111,7 +117,7 @@ def build_training_args(cfg: dict, output_dir: Path) -> TrainingArguments:
         fp16=use_fp16,
         bf16=cfg.get("bf16", False),
         seed=cfg.get("seed", 42),
-        report_to="none",
+        report_to=cfg.get("report_to", "tensorboard"),
         dataloader_num_workers=2,
         remove_unused_columns=True,
     )
@@ -125,7 +131,7 @@ def run_training(
     training_cfg: dict,
     output_dir: Path,
     resume_from_checkpoint: Optional[str] = None,
-) -> None:
+) -> Trainer:
     """
     Run the full MLM training loop.
 
@@ -137,10 +143,16 @@ def run_training(
         training_cfg: Dict from training_config.yaml.
         output_dir: Directory for checkpoints.
         resume_from_checkpoint: Path to checkpoint dir or None.
+
+    Returns:
+        Trainer instance after training (caller can access .model, .state, etc.).
     """
     set_seed(training_cfg.get("seed", 42))
 
     max_length = training_cfg.get("max_seq_length", 128)
+
+    # Inject actual dataset size so warmup_steps calculation is accurate
+    training_cfg = {**training_cfg, "train_dataset_size": len(train_dataset)}
 
     # Tokenise
     logger.info("Tokenising training split...")
@@ -174,4 +186,4 @@ def run_training(
     perplexity = math.exp(eval_results["eval_loss"])
     logger.info(f"Final eval loss: {eval_results['eval_loss']:.4f} | Perplexity: {perplexity:.2f}")
 
-
+    return trainer

@@ -52,6 +52,14 @@ def main() -> None:
     parser.add_argument("--training-config", default="configs/training_config.yaml")
     parser.add_argument("--data-config",     default="configs/data_config.yaml")
     parser.add_argument("--resume",          default=None, help="Path to checkpoint to resume from")
+    parser.add_argument(
+        "--train-data", default=None,
+        help="Override training JSONL path (default: processed_dir/train.jsonl from data config)",
+    )
+    parser.add_argument(
+        "--val-data", default=None,
+        help="Override validation JSONL path (default: processed_dir/validation.jsonl from data config)",
+    )
     args = parser.parse_args()
 
     # ── Load configs ─────────────────────────────────────────────────────────
@@ -71,18 +79,20 @@ def main() -> None:
 
     # ── Load data ─────────────────────────────────────────────────────────────
     processed_dir = Path(data_cfg["processed_dir"])
-    train_path = processed_dir / "train.jsonl"
-    val_path   = processed_dir / "validation.jsonl"
+    train_path = Path(args.train_data) if args.train_data else processed_dir / "train.jsonl"
+    val_path   = Path(args.val_data)   if args.val_data   else processed_dir / "validation.jsonl"
 
     for p in [train_path, val_path]:
         if not p.exists():
             logger.error(
                 f"Dataset file not found: {p}\n"
-                "Run: python scripts/build_mlm_dataset.py first."
+                "Run: python scripts/build_mlm_dataset.py   (for Lexitron/Wiki)\n"
+                "     python scripts/build_medical_corpus.py (for medical data)"
             )
             sys.exit(1)
 
-    logger.info("Loading datasets...")
+    logger.info(f"Train data : {train_path}")
+    logger.info(f"Val data   : {val_path}")
     train_dataset = load_jsonl_dataset(train_path)
     eval_dataset  = load_jsonl_dataset(val_path)
     logger.info(f"Train: {len(train_dataset):,} | Val: {len(eval_dataset):,}")
@@ -100,7 +110,7 @@ def main() -> None:
     output_dir = Path(train_cfg["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    run_training(
+    trainer = run_training(
         model=model,
         tokenizer=tokenizer,
         train_dataset=train_dataset,
@@ -111,8 +121,9 @@ def main() -> None:
     )
 
     # ── Save adapter ──────────────────────────────────────────────────────────
+    # Use trainer.model to guarantee we save the post-training weights
     adapter_dir = Path(model_cfg["adapter_output_dir"])
-    save_lora_adapter(model, adapter_dir)
+    save_lora_adapter(trainer.model, adapter_dir)
 
     # Also save tokenizer alongside adapter for convenience
     tokenizer.save_pretrained(str(adapter_dir))

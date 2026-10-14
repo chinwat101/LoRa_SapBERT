@@ -97,7 +97,9 @@ def load_base_model_and_tokenizer(model_path: str | Path):
         )
 
     logger.info(f"Loading tokenizer from: {model_path}")
-    tokenizer = AutoTokenizer.from_pretrained(str(model_path), use_fast=False)
+    # use_fast=True (Rust-based) is ~10x faster for large datasets.
+    # Switch to use_fast=False only if the model requires a custom slow tokenizer.
+    tokenizer = AutoTokenizer.from_pretrained(str(model_path), use_fast=True)
 
     logger.info(f"Loading BertForMaskedLM from: {model_path}")
     model = BertForMaskedLM.from_pretrained(str(model_path))

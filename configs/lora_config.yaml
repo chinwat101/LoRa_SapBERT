@@ -18,7 +18,10 @@ lora:
     - "word_embeddings"
     - "cls.predictions"
 
-  # Task type - FEATURE_EXTRACTION for BERT encoder (MLM uses the full BertForMaskedLM)
+  # Task type for PEFT LoRA.
+  # BERT is encoder-only → use FEATURE_EXTRACTION (the correct type for all PEFT versions).
+  # The MLM head (cls.predictions) is trained fully via modules_to_save below,
+  # so it does NOT need a special task_type to be updated during training.
   task_type: "FEATURE_EXTRACTION"
 
   # Inference mode (set false during training)

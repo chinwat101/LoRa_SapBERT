@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 scripts/evaluate_mlm.py
-Step 9: Evaluate MLM perplexity and report parameter counts.
+Evaluate MLM perplexity and report parameter counts.
 
 Evaluates:
   1. MLM loss & perplexity on test set
@@ -9,8 +9,24 @@ Evaluates:
   3. Optionally compares base model vs LoRA-adapted model
 
 Usage:
+    # Default: base model vs current adapter, on test split
     python scripts/evaluate_mlm.py
-    python scripts/evaluate_mlm.py --config configs/model_config.yaml --split test
+
+    # Choose a specific merged model
+    python scripts/evaluate_mlm.py --merged outputs/merged_model_3
+
+    # Evaluate on medical test data instead of wiki/Lexitron test
+    python scripts/evaluate_mlm.py --eval-data data/processed/medical_test.jsonl
+
+    # Override base model path
+    python scripts/evaluate_mlm.py --model outputs/merged_model_1_1
+
+    # Full custom run
+    python scripts/evaluate_mlm.py \\
+        --model    data/interim/extended_base \\
+        --adapter  outputs/adapters/lexitron_wiki_thai_lora_r32 \\
+        --eval-data data/processed/medical_test.jsonl \\
+        --split    test
 """
 import argparse
 import json
@@ -64,7 +80,7 @@ def evaluate_model(model, tokenizer, dataset: Dataset, max_length: int = 128, la
         report_to="none",
         seed=42,
     )
-
+    
     trainer = Trainer(
         model=model,
         args=args,
@@ -92,11 +108,18 @@ def evaluate_model(model, tokenizer, dataset: Dataset, max_length: int = 128, la
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate MLM model")
-    parser.add_argument("--config",   default="configs/model_config.yaml")
-    parser.add_argument("--training", default="configs/training_config.yaml")
-    parser.add_argument("--data",     default="configs/data_config.yaml")
-    parser.add_argument("--split",    default="test", choices=["train", "validation", "test"])
-    parser.add_argument("--adapter",  default=None, help="Path to LoRA adapter dir. If None, evaluates base only.")
+    parser.add_argument("--config",    default="configs/model_config.yaml")
+    parser.add_argument("--training",  default="configs/training_config.yaml")
+    parser.add_argument("--data",      default="configs/data_config.yaml")
+    parser.add_argument("--split",     default="test", choices=["train", "validation", "test"])
+    parser.add_argument("--adapter",   default=None,
+                        help="Path to LoRA adapter dir. If None, uses adapter_output_dir from config.")
+    parser.add_argument("--model",     default=None,
+                        help="Override base model path (default: base_model_path from model_config.yaml)")
+    parser.add_argument("--merged",    default=None,
+                        help="Evaluate a fully merged model directly (skips adapter step)")
+    parser.add_argument("--eval-data", default=None,
+                        help="Override eval JSONL file path (e.g. data/processed/medical_test.jsonl)")
     args = parser.parse_args()
 
     with open(Path(args.config), encoding="utf-8") as f:
@@ -106,29 +129,46 @@ def main() -> None:
     with open(Path(args.data), encoding="utf-8") as f:
         data_cfg = yaml.safe_load(f)["data"]
 
-    split_path = Path(data_cfg["processed_dir"]) / f"{args.split}.jsonl"
+    # ── Resolve paths ────────────────────────────────────────────────────────
+    if args.eval_data:
+        split_path = Path(args.eval_data)
+    else:
+        split_path = Path(data_cfg["processed_dir"]) / f"{args.split}.jsonl"
+
     if not split_path.exists():
-        logger.error(f"Split file not found: {split_path}")
+        logger.error(f"Eval data file not found: {split_path}")
         sys.exit(1)
 
     dataset = load_jsonl_dataset(split_path)
-    logger.info(f"Evaluating on {args.split} split: {len(dataset):,} samples")
+    logger.info(f"Eval data : {split_path} ({len(dataset):,} samples)")
 
     max_length = train_cfg.get("max_seq_length", 128)
-    model_path = model_cfg["base_model_path"]
+    model_path = args.model or model_cfg["base_model_path"]
 
     # ── Evaluate base model ──────────────────────────────────────────────────
     base_model, tokenizer = load_base_model_and_tokenizer(model_path)
-    base_results = evaluate_model(base_model, tokenizer, dataset, max_length, label="Base Model")
+    base_results = evaluate_model(base_model, tokenizer, dataset, max_length, label=f"Base ({Path(model_path).name})")
+
+    # ── Evaluate fully merged model (if --merged given) ──────────────────────
+    if args.merged:
+        merged_path = Path(args.merged)
+        if merged_path.exists() and (merged_path / "config.json").exists():
+            logger.info(f"\nLoading merged model from: {merged_path}")
+            merged_model, _ = load_base_model_and_tokenizer(str(merged_path))
+            evaluate_model(merged_model, tokenizer, dataset, max_length,
+                           label=f"Merged ({merged_path.name})")
+        else:
+            logger.error(f"Merged model not found: {merged_path}")
+        return
 
     # ── Evaluate LoRA model (optional) ──────────────────────────────────────
     adapter_dir = args.adapter or str(Path(model_cfg["adapter_output_dir"]))
     if Path(adapter_dir).exists():
         logger.info(f"\nLoading LoRA adapter from: {adapter_dir}")
-        # Reload base (clean state) then attach adapter
         lora_base, _ = load_base_model_and_tokenizer(model_path)
         lora_model = load_lora_adapter(lora_base, adapter_dir)
-        lora_results = evaluate_model(lora_model, tokenizer, dataset, max_length, label="Base + LoRA")
+        lora_results = evaluate_model(lora_model, tokenizer, dataset, max_length,
+                                      label=f"Base + LoRA ({Path(adapter_dir).name})")
 
         # Comparison
         logger.info("\n" + "=" * 50)
@@ -138,7 +178,8 @@ def main() -> None:
         logger.info(f"  {'-'*50}")
         logger.info(f"  {'MLM Loss':<25} {base_results['loss']:>12.4f} {lora_results['loss']:>12.4f}")
         logger.info(f"  {'Perplexity':<25} {base_results['perplexity']:>12.2f} {lora_results['perplexity']:>12.2f}")
-        logger.info(f"  {'Trainable %':<25} {100*base_results['trainable']/base_results['total']:>11.2f}% {100*lora_results['trainable']/lora_results['total']:>11.2f}%")
+        logger.info(f"  {'Trainable %':<25} {100*base_results['trainable']/base_results['total']:>11.2f}% "
+                    f"{100*lora_results['trainable']/lora_results['total']:>11.2f}%")
     else:
         logger.info(f"\nNo adapter found at {adapter_dir} — evaluating base model only.")
 

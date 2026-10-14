@@ -244,6 +244,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Fine-tune SapBERT for NER")
     parser.add_argument("--config", default="configs/sapbert_ner_config.yaml")
     parser.add_argument("--base-model", default=None, help="Path to base model (overrides config/autodetect)")
+    parser.add_argument("--train-file", "--train-data", default=None, help="Path to training dataset (.jsonl)")
+    parser.add_argument("--val-file", "--val-data", default=None, help="Path to validation dataset (.jsonl)")
+    parser.add_argument("--epochs", type=int, default=None, help="Number of training epochs")
     parser.add_argument("--resume", default=None, help="Checkpoint path to resume")
     args = parser.parse_args()
 
@@ -254,6 +257,8 @@ def main() -> None:
     data_cfg     = cfg["data"]
     lora_cfg     = {**cfg.get("lora", {}), **model_cfg}
     training_cfg = cfg["training"]
+    if args.epochs is not None:
+        training_cfg["num_train_epochs"] = args.epochs
 
     set_seed(training_cfg.get("seed", 42))
 
@@ -297,7 +302,8 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(str(model_path))
 
     # 5. Load & split data
-    train_file = Path(data_cfg["train_file"])
+    train_file_path = args.train_file or data_cfg["train_file"]
+    train_file = Path(train_file_path)
     if not train_file.exists():
         logger.error(f"Train file not found: {train_file}")
         logger.error("Run: python scripts/convert_ner_dataset.py first.")
@@ -306,9 +312,9 @@ def main() -> None:
     records = load_jsonl(train_file)
     logger.info(f"Loaded {len(records)} examples from {train_file}")
 
-    val_file = data_cfg.get("val_file")
-    if val_file and Path(val_file).exists():
-        val_records = load_jsonl(Path(val_file))
+    val_file_path = args.val_file or data_cfg.get("val_file")
+    if val_file_path and Path(val_file_path).exists():
+        val_records = load_jsonl(Path(val_file_path))
         train_records = records
     else:
         val_frac = data_cfg.get("val_split", 0.2)
