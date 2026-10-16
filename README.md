@@ -114,3 +114,30 @@ python scripts/evaluate_partial_match.py `
   --model outputs/fl_multitask_merged_ner `
   --data data/raw/text100_answer.json
 ```
+
+
+#### Step8:เทรน Multitask: NER + Relation Extraction
+```bash
+
+python scripts/train_mtl.py 
+#หรือ
+python scripts/train_mtl.py --config configs/mtl_config.yaml
+#ก่อนเทรนดู confi ว่า Path ถูก
+model:
+  base_model_path: "outputs/merged_model"   #  model ที่การ fine-tune  
+  output_dir: "outputs/mtl_model"                    # ที่บันทึก best model
+  ner_export_dir: "outputs/mtl_model_ner"            # standalone NER export (Hugging Face)
+  freeze_encoder: false         
+```
+
+
+#### Step9:เทรน SpERT: Entity + Relation Extraction
+```bash
+python scripts/train_spert.py --config 
+#หรือ
+python scripts/train_spert.py --config configs/spert_config.yaml
+#ก่อนเทรนดู confi ว่า Path ถูก
+model_path: "outputs/merged_model"
+dataset_path: "data/processed/ner_and_Relation.jsonl"
+output_dir: "outputs/spert_wangchan"
+```

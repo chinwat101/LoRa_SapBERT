@@ -27,6 +27,8 @@ from typing import Any
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from scripts.relation_eval_utils import gold_relations, print_relation_report, score_relations
+
 LABELS = ("DRUG", "DISEASE", "SYMPTOM")
 
 # Example: [DISEASE ]  'โรคไข้หวัด'  (pos 20–30)
@@ -96,12 +98,19 @@ def load_gold(path: Path, lang: str | None = None) -> list[dict[str, Any]]:
             if not ent_text:
                 continue
 
+            start = ent.get("start")
+            end = ent.get("end")
+            if start is None or end is None:
+                start = text.find(ent_text)
+                end = start + len(ent_text) if start >= 0 else None
             entities.append({
                 "text": ent_text,
                 "label": ent["label"],
+                "start": start,
+                "end": end,
             })
 
-        gold.append({"text": text, "entities": entities})
+        gold.append({"text": text, "entities": entities, "relations": gold_relations(item)})
 
     if not gold:
         raise ValueError(f"ไม่พบข้อมูลในไฟล์ Gold: {path} (อาจถูกกรองด้วยเงื่อนไข)")
@@ -129,14 +138,17 @@ def load_predictions(path: Path) -> list[dict[str, Any]]:
         predictions: list[dict[str, Any]] = []
         for item in raw_list:
             if isinstance(item, dict) and "text" in item:
-                predictions.append({
+                prediction = {
                     "text": item["text"],
                     "entities": [
-                        {"text": e["text"], "label": e["label"]}
+                        {k: e[k] for k in ("text", "label", "start", "end") if k in e}
                         for e in item.get("entities", [])
                         if isinstance(e, dict) and "text" in e and "label" in e
                     ],
-                })
+                }
+                if "relations" in item:
+                    prediction["relations"] = item["relations"]
+                predictions.append(prediction)
         if not predictions:
             raise ValueError(f"ไม่พบข้อมูลประโยคในไฟล์ Prediction JSON: {path}")
         return predictions
@@ -180,6 +192,25 @@ def run_model_inference(
     from scripts.inference_ner import load_ner_model, predict
 
     print(f"Loading model: {model_dir_or_adapter} ...")
+    model_dir = Path(model_dir_or_adapter)
+    label_config_path = model_dir / "label_config.json"
+    checkpoint_path = model_dir / "model.pt"
+    run_config_path = model_dir / "run_config.yaml"
+    if label_config_path.is_file() and checkpoint_path.is_file() and run_config_path.is_file():
+        from scripts.relation_eval_utils import run_spert_inference
+
+        print("Detected SpERT checkpoint; loading entity and relation model.")
+        return run_spert_inference(gold, model_dir_or_adapter, quiet=quiet)
+
+    if label_config_path.is_file() and checkpoint_path.is_file():
+        with label_config_path.open(encoding="utf-8") as stream:
+            checkpoint_config = json.load(stream)
+        if "ner_labels" in checkpoint_config and "relation_labels" in checkpoint_config:
+            from scripts.relation_eval_utils import run_mtl_inference
+
+            print("Detected MTL checkpoint; loading its encoder and joint NER/RE heads.")
+            return run_mtl_inference(gold, model_dir_or_adapter, quiet=quiet)
+
     model, tokenizer, id2label = load_ner_model(model_dir_or_adapter, base_model_dir)
 
     predictions: list[dict[str, Any]] = []
@@ -197,7 +228,7 @@ def run_model_inference(
         predictions.append({
             "text": text,
             "entities": [
-                {"text": e["text"], "label": e["label"]}
+                {k: e[k] for k in ("text", "label", "start", "end") if k in e}
                 for e in pred_entities
             ],
         })
@@ -310,6 +341,25 @@ def print_report(
     print("  A zero denominator is reported as 0.00%.")
 
 
+def print_entity_details(predictions: list[dict[str, Any]], gold: list[dict[str, Any]]) -> None:
+    """Print each sentence with its gold and predicted entities and character spans."""
+    print("\nEntity Details (Gold vs Prediction)")
+    print("=" * 82)
+    for index, (pred_item, gold_item) in enumerate(zip(predictions, gold), start=1):
+        print(f"[{index}/{len(gold)}] {gold_item['text']}")
+        for title, item in (("Gold", gold_item), ("Pred", pred_item)):
+            entities = item.get("entities", [])
+            print(f"  {title}:")
+            if not entities:
+                print("    (none)")
+                continue
+            for entity in entities:
+                span = ""
+                if entity.get("start") is not None and entity.get("end") is not None:
+                    span = f" (pos {entity['start']}-{entity['end']})"
+                print(f"    [{entity['label']}] '{entity['text']}'{span}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Calculate NER Exact Match scores directly from model & dataset, or pre-computed prediction file."
@@ -334,6 +384,7 @@ def main() -> int:
     parser.add_argument("--output", "-o", default=None, type=Path,
                         help="Optional path to save evaluation report and predictions (.json)")
     parser.add_argument("--quiet", "-q", action="store_true", help="Suppress progress output")
+    parser.add_argument("--show-entities", action="store_true", help="Print gold and predicted entities for every sentence")
 
     args = parser.parse_args()
 
@@ -384,6 +435,12 @@ def main() -> int:
         return 1
 
     print_report(predictions, gold, results)
+    if args.show_entities:
+        print_entity_details(predictions, gold)
+    if any("relations" in item for item in predictions):
+        print_relation_report(score_relations(predictions, gold, partial=False))
+    elif any(item.get("relations") for item in gold):
+        print("\nRelation evaluation skipped: this NER model/prediction file has no relation outputs.")
 
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

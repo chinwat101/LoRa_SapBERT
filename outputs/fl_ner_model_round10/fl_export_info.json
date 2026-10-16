@@ -1,0 +1,36 @@
+{
+  "base_model": "outputs/merged_model_3",
+  "fl_dir": "outputs/fl_ner",
+  "exported_round": 10,
+  "label2id": {
+    "O": 0,
+    "B-DRUG": 1,
+    "I-DRUG": 2,
+    "B-DISEASE": 3,
+    "I-DISEASE": 4,
+    "B-SYMPTOM": 5,
+    "I-SYMPTOM": 6
+  },
+  "id2label": {
+    "0": "O",
+    "1": "B-DRUG",
+    "2": "I-DRUG",
+    "3": "B-DISEASE",
+    "4": "I-DISEASE",
+    "5": "B-SYMPTOM",
+    "6": "I-SYMPTOM"
+  },
+  "lora_config": {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.1,
+    "bias": "none",
+    "task_type": "TOKEN_CLS",
+    "target_modules": [
+      "query",
+      "key",
+      "value",
+      "dense"
+    ]
+  }
+}

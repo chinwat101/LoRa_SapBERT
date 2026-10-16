@@ -9,7 +9,7 @@ training:
 
   # Hyperparameters
   learning_rate: 2.0e-4
-  num_train_epochs: 1
+  num_train_epochs: 5
   per_device_train_batch_size: 32   # RTX 5060 8GB: 32 fits comfortably with seq_len=128
   per_device_eval_batch_size: 64
   gradient_accumulation_steps: 1    # effective batch = 32 (was 16x2)

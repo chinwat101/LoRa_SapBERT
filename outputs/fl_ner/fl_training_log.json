@@ -1,0 +1,122 @@
+[
+  {
+    "round": 1,
+    "global_f1": 0.5026975995591154,
+    "client_f1s": [
+      0.8667215137803372,
+      0.6666666666666666
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 2,
+    "global_f1": 0.6602570686543512,
+    "client_f1s": [
+      0.8993873948707299,
+      0.717391304347826
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 3,
+    "global_f1": 0.7426599711070165,
+    "client_f1s": [
+      0.9105521344327314,
+      0.7333333333333334
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 4,
+    "global_f1": 0.7841447377723731,
+    "client_f1s": [
+      0.92106911672583,
+      0.723404255319149
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 5,
+    "global_f1": 0.7483047106625098,
+    "client_f1s": [
+      0.923254109517328,
+      0.7032967032967035
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 6,
+    "global_f1": 0.8065102162947764,
+    "client_f1s": [
+      0.9292378656043611,
+      0.7272727272727273
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 7,
+    "global_f1": 0.8241880009785723,
+    "client_f1s": [
+      0.9292887029288702,
+      0.7272727272727273
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 8,
+    "global_f1": 0.8136733933971556,
+    "client_f1s": [
+      0.9332215116888563,
+      0.7865168539325843
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 9,
+    "global_f1": 0.812817093757269,
+    "client_f1s": [
+      0.9310308738880168,
+      0.7096774193548387
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  },
+  {
+    "round": 10,
+    "global_f1": 0.8119853487923769,
+    "client_f1s": [
+      0.9355853965589593,
+      0.7555555555555555
+    ],
+    "client_names": [
+      "Hospital_A_QA",
+      "Hospital_B_Labels"
+    ]
+  }
+]

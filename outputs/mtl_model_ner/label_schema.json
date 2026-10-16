@@ -1,0 +1,22 @@
+{
+  "label2id": {
+    "O": 0,
+    "B-DRUG": 1,
+    "I-DRUG": 2,
+    "B-DISEASE": 3,
+    "I-DISEASE": 4,
+    "B-SYMPTOM": 5,
+    "I-SYMPTOM": 6
+  },
+  "id2label": {
+    "0": "O",
+    "1": "B-DRUG",
+    "2": "I-DRUG",
+    "3": "B-DISEASE",
+    "4": "I-DISEASE",
+    "5": "B-SYMPTOM",
+    "6": "I-SYMPTOM"
+  },
+  "source_mtl_dir": "outputs\\mtl_model",
+  "export_scope": "NER only; relation head remains in the MTL checkpoint"
+}

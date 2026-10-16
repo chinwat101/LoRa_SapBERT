@@ -1,0 +1,25 @@
+{
+  "entity_labels": [
+    "DRUG",
+    "DISEASE",
+    "SYMPTOM"
+  ],
+  "relation_labels": [
+    "TREATS",
+    "INDICATED_FOR"
+  ],
+  "model_path": "I:/NECTEC/thai_bert_lora/outputs/fl_ner_model_round10",
+  "relation_threshold": 0.4,
+  "best_validation_metrics": {
+    "val_loss": 0.04389161330182105,
+    "val_entity_loss": 0.020756052731303497,
+    "val_relation_loss": 0.023135560502305454,
+    "val_entity_precision": 0.8732394366197183,
+    "val_entity_recall": 0.8920863309352518,
+    "val_entity_f1": 0.8825622775800712,
+    "val_relation_precision": 0.8295454545454546,
+    "val_relation_recall": 0.8690476190476191,
+    "val_relation_f1": 0.8488372093023256,
+    "val_joint_f1": 0.8656997434411984
+  }
+}

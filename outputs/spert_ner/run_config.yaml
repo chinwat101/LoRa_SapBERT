@@ -1,0 +1,38 @@
+model_path: I:/NECTEC/thai_bert_lora/outputs/fl_ner_model_round10
+tokenizer_path: I:/NECTEC/thai_bert_lora/outputs/fl_ner_model_round10
+dataset_path: I:/NECTEC/thai_bert_lora/data/processed/ner_and_Relation.jsonl
+output_dir: I:/NECTEC/thai_bert_lora/outputs/spert_fl_ner_round10
+seed: 42
+entity_labels:
+- DRUG
+- DISEASE
+- SYMPTOM
+relation_labels:
+- TREATS
+- INDICATED_FOR
+model:
+  freeze_encoder: false
+  gradient_checkpointing: true
+  size_embedding_dim: 25
+  dropout: 0.1
+  relation_chunk_size: 100
+data:
+  max_seq_length: 256
+  max_span_size: 10
+  neg_entity_count: 100
+  neg_relation_count: 100
+  validation_split: 0.2
+  num_workers: 0
+training:
+  epochs: 50
+  batch_size: 1
+  mixed_precision: true
+  learning_rate: 5.0e-05
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  lambda_entity: 1.0
+  lambda_relation: 1.0
+  early_stopping_patience: 10
+evaluation:
+  relation_threshold: 0.4

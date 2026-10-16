@@ -1,0 +1,17 @@
+{
+  "ner_labels": [
+    "O",
+    "B-DRUG",
+    "I-DRUG",
+    "B-DISEASE",
+    "I-DISEASE",
+    "B-SYMPTOM",
+    "I-SYMPTOM"
+  ],
+  "relation_labels": [
+    "NO_RELATION",
+    "TREATS",
+    "INDICATED_FOR"
+  ],
+  "base_model_path": "outputs/fl_ner_model_round10"
+}

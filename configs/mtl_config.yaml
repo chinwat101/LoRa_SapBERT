@@ -1,0 +1,58 @@
+# ==============================================================================
+# Multi-Task Learning (MTL) Configuration: NER + Relation Extraction
+# ==============================================================================
+# ไฟล์นี้สร้างขึ้นเพื่อ:
+#   กำหนด hyperparameters และ settings ทั้งหมดสำหรับ
+#   การฝึก Multi-task Learning (NER + RE) บน BERT
+#   ด้วยข้อมูลทางการแพทย์ภาษาไทย
+# ==============================================================================
+
+# --- Model ---
+model:
+  base_model_path: "outputs/fl_ner_model_round10"   # WangchanBERTa ที่ fine-tune NER แล้ว
+  output_dir: "outputs/mtl_model"                    # ที่บันทึก best model
+  ner_export_dir: "outputs/mtl_model_ner"            # standalone NER export (Hugging Face)
+  freeze_encoder: false                              # true = freeze BERT, false = fine-tune ทั้งหมด
+
+# --- Data ---
+data:
+  train_file: "data/processed/ner_and_Relation.jsonl"
+  val_split: 0.2                  # 20% สำหรับ validation (≈41 samples)
+  max_seq_length: 256
+  max_neg_pairs: 10               # จำนวน negative relation pairs ต่อ sample (สุ่มจาก NO_RELATION)
+  seed: 42
+
+# --- NER Schema ---
+ner_labels:
+  - "O"
+  - "B-DRUG"
+  - "I-DRUG"
+  - "B-DISEASE"
+  - "I-DISEASE"
+  - "B-SYMPTOM"
+  - "I-SYMPTOM"
+
+# --- RE Schema ---
+relation_labels:
+  - "NO_RELATION"
+  - "TREATS"
+  - "INDICATED_FOR"
+
+# --- Training ---
+training:
+  epochs: 50
+  batch_size: 8
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1               # warmup 10% ของ total steps
+  max_grad_norm: 1.0              # gradient clipping
+  fp16: false                     # ตั้งเป็น true หาก GPU รองรับ
+  lambda_ner: 1.0                 # weight ของ NER loss ใน joint loss
+  lambda_re: 1.0                  # weight ของ RE loss ใน joint loss
+  early_stopping_patience: 15    # หยุดถ้า val joint-F1 ไม่ดีขึ้นใน N epochs
+  save_best_only: true            # บันทึกเฉพาะ checkpoint ที่ดีที่สุด
+
+# --- Logging ---
+logging:
+  log_every_n_epochs: 1
+  verbose: true
